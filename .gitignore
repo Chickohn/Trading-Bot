@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+.env/
+.venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data and results
+logs/
+data/
+mlruns/
+models/
+*.csv
+*.json
+*.h5
+*.pkl
+*.joblib
+*.sqlite3
+*.db
+*.log
+*.html
+
+# Secrets and config
+.env
+.env.*
+Keys.txt
+*.key
+*.pem
+*.crt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors/IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.bak
+*.tmp
+
+# Docker
+*.pid
+*.sock
+
+# Test outputs
+coverage/
+htmlcov/
+.tox/
+.pytest_cache/
+
+# Misc
+*.cache
+*.egg-info/ 
