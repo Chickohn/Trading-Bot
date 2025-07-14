@@ -20,7 +20,7 @@ if SRC_PATH not in sys.path:
 
 from utils.config import config, trading
 from data.base import DataManager, OHLCV
-from data.alpaca_provider import AlpacaDataProvider
+from data.hybrid_provider import HybridDataProvider
 from features.technical_indicators import TechnicalIndicators
 from models.base_model import ModelConfig
 from models.random_forest_model import RandomForestModel
@@ -73,8 +73,8 @@ class TradingBot:
         self.state.data_manager = DataManager()
         
         # Add data providers
-        alpaca_provider = AlpacaDataProvider()
-        self.state.data_manager.add_provider("alpaca", alpaca_provider)
+        hybrid_provider = HybridDataProvider()
+        self.state.data_manager.add_provider("hybrid", hybrid_provider)
         
         # Initialize technical indicators
         self.state.indicators = TechnicalIndicators()
@@ -195,7 +195,7 @@ class TradingBot:
         start_date = end_date - timedelta(days=365)  # 1 year of data
         
         ohlcv_data = await self.state.data_manager.get_data_from_provider(
-            "alpaca", symbol, "1h", start_date, end_date
+            "hybrid", symbol, "1h", start_date, end_date
         )
         
         if not ohlcv_data:
@@ -223,7 +223,7 @@ class TradingBot:
         
         for symbol in self.state.symbols:
             await self.state.data_manager.start_realtime_stream(
-                "alpaca",
+                "hybrid",
                 [symbol],
                 trading.default_timeframe,
                 self._process_market_data
@@ -279,7 +279,7 @@ class TradingBot:
         start_date = end_date - timedelta(days=30)  # Last 30 days
         
         ohlcv_data = await self.state.data_manager.get_data_from_provider(
-            "alpaca", symbol, trading.default_timeframe, start_date, end_date
+            "hybrid", symbol, trading.default_timeframe, start_date, end_date
         )
         
         if not ohlcv_data:
@@ -304,10 +304,10 @@ class TradingBot:
     async def _get_account_info(self) -> Dict:
         """Get current account information."""
         try:
-            # Get account info from Alpaca
-            alpaca_provider = self.state.data_manager.providers.get("alpaca")
-            if alpaca_provider:
-                return await alpaca_provider.get_account_info()
+            # Get account info from hybrid provider
+            hybrid_provider = self.state.data_manager.providers.get("hybrid")
+            if hybrid_provider:
+                return await hybrid_provider.get_account_info()
         except Exception as e:
             logger.error(f"Error getting account info: {e}")
         
@@ -361,11 +361,11 @@ class TradingBot:
             return
         
         # Place order with broker
-        alpaca_provider = self.state.data_manager.providers.get("alpaca")
-        if alpaca_provider:
+        hybrid_provider = self.state.data_manager.providers.get("hybrid")
+        if hybrid_provider:
             side = "buy" if signal.signal_type.value == "buy" else "sell"
             
-            order_result = await alpaca_provider.place_order(
+            order_result = await hybrid_provider.place_order(
                 signal.symbol, side, quantity
             )
             

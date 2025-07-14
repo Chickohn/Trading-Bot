@@ -8,7 +8,10 @@ from pydantic_settings import BaseSettings
 from pydantic import Field, validator
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env file from project root
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+env_path = os.path.join(project_root, '.env')
+load_dotenv(env_path)
 
 
 class DatabaseConfig(BaseSettings):
@@ -166,6 +169,12 @@ trading = TradingConfig()
 model = ModelConfig()
 monitoring = MonitoringConfig()
 mlflow = MLflowConfig()
+
+# Override trading symbols with environment variable if available
+import os
+if os.getenv('TRADING_SYMBOLS'):
+    symbols_str = os.getenv('TRADING_SYMBOLS')
+    trading.trading_symbols = [s.strip() for s in symbols_str.split(',')]
 
 # Usage:
 # from src.utils.config import config, database, redis, alpaca, polygon, binance, risk, trading, model, monitoring, mlflow 

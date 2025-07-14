@@ -1,9 +1,9 @@
 # Trading Bot Configuration
 trading:
   mode: paper
-  symbols: ["AAPL", "TSLA", "MSFT"]
+  symbols: ["AAPL", "TSLA", "MSFT", "SPX"]
   timeframe: "1m"
-  max_positions: 5
+  max_positions: 25
 
 risk:
   max_position_size: 0.1

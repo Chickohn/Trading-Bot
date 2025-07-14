@@ -75,68 +75,102 @@ class TechnicalIndicators:
     def _add_trend_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add trend-following indicators."""
         try:
+            # Check if we have sufficient data for calculations
+            min_periods = max(200, self.config.slow_period, self.config.lookback_period)
+            if len(df) < min_periods:
+                logger.warning(f"Insufficient data for trend indicators: {len(df)} bars, need {min_periods}")
+                # Calculate what we can with available data
+                min_periods = min(len(df), 20)  # Use what we have, up to 20
+            
             if TALIB_AVAILABLE:
-                # Moving Averages
-                df['sma_5'] = talib.SMA(df['close'], timeperiod=5)
-                df['sma_10'] = talib.SMA(df['close'], timeperiod=10)
-                df['sma_20'] = talib.SMA(df['close'], timeperiod=20)
-                df['sma_50'] = talib.SMA(df['close'], timeperiod=50)
-                df['sma_200'] = talib.SMA(df['close'], timeperiod=200)
+                # Moving Averages - only calculate if we have enough data
+                if len(df) >= 5:
+                    df['sma_5'] = talib.SMA(df['close'], timeperiod=5)
+                if len(df) >= 10:
+                    df['sma_10'] = talib.SMA(df['close'], timeperiod=10)
+                if len(df) >= 20:
+                    df['sma_20'] = talib.SMA(df['close'], timeperiod=20)
+                if len(df) >= 50:
+                    df['sma_50'] = talib.SMA(df['close'], timeperiod=50)
+                if len(df) >= 200:
+                    df['sma_200'] = talib.SMA(df['close'], timeperiod=200)
                 
                 # Exponential Moving Averages
-                df['ema_12'] = talib.EMA(df['close'], timeperiod=12)
-                df['ema_26'] = talib.EMA(df['close'], timeperiod=26)
-                df['ema_50'] = talib.EMA(df['close'], timeperiod=50)
+                if len(df) >= 12:
+                    df['ema_12'] = talib.EMA(df['close'], timeperiod=12)
+                if len(df) >= 20:
+                    df['ema_20'] = talib.EMA(df['close'], timeperiod=20)
+                if len(df) >= 26:
+                    df['ema_26'] = talib.EMA(df['close'], timeperiod=26)
+                if len(df) >= 50:
+                    df['ema_50'] = talib.EMA(df['close'], timeperiod=50)
                 
                 # MACD
-                macd, macd_signal, macd_hist = talib.MACD(
-                    df['close'],
-                    fastperiod=self.config.fast_period,
-                    slowperiod=self.config.slow_period,
-                    signalperiod=self.config.signal_period
-                )
-                df['macd'] = macd
-                df['macd_signal'] = macd_signal
-                df['macd_histogram'] = macd_hist
+                if len(df) >= self.config.slow_period + self.config.signal_period:
+                    macd, macd_signal, macd_hist = talib.MACD(
+                        df['close'],
+                        fastperiod=self.config.fast_period,
+                        slowperiod=self.config.slow_period,
+                        signalperiod=self.config.signal_period
+                    )
+                    df['macd'] = macd
+                    df['macd_signal'] = macd_signal
+                    df['macd_histogram'] = macd_hist
                 
                 # Parabolic SAR
-                df['sar'] = talib.SAR(df['high'], df['low'], acceleration=0.02, maximum=0.2)
+                if len(df) >= 3:
+                    df['sar'] = talib.SAR(df['high'], df['low'], acceleration=0.02, maximum=0.2)
                 
                 # ADX (Average Directional Index)
-                df['adx'] = talib.ADX(df['high'], df['low'], df['close'], timeperiod=self.config.lookback_period)
+                if len(df) >= self.config.lookback_period:
+                    df['adx'] = talib.ADX(df['high'], df['low'], df['close'], timeperiod=self.config.lookback_period)
                 
                 # Aroon Oscillator
-                aroon_down, aroon_up = talib.AROON(df['high'], df['low'], timeperiod=self.config.lookback_period)
-                df['aroon_down'] = aroon_down
-                df['aroon_up'] = aroon_up
-                df['aroon_osc'] = aroon_up - aroon_down
+                if len(df) >= self.config.lookback_period:
+                    aroon_down, aroon_up = talib.AROON(df['high'], df['low'], timeperiod=self.config.lookback_period)
+                    df['aroon_down'] = aroon_down
+                    df['aroon_up'] = aroon_up
+                    df['aroon_osc'] = aroon_up - aroon_down
             else:
                 # Fallback to ta library
                 import ta
-                df['sma_5'] = ta.trend.sma_indicator(df['close'], window=5)
-                df['sma_10'] = ta.trend.sma_indicator(df['close'], window=10)
-                df['sma_20'] = ta.trend.sma_indicator(df['close'], window=20)
-                df['sma_50'] = ta.trend.sma_indicator(df['close'], window=50)
-                df['sma_200'] = ta.trend.sma_indicator(df['close'], window=200)
+                if len(df) >= 5:
+                    df['sma_5'] = ta.trend.sma_indicator(df['close'], window=5)
+                if len(df) >= 10:
+                    df['sma_10'] = ta.trend.sma_indicator(df['close'], window=10)
+                if len(df) >= 20:
+                    df['sma_20'] = ta.trend.sma_indicator(df['close'], window=20)
+                if len(df) >= 50:
+                    df['sma_50'] = ta.trend.sma_indicator(df['close'], window=50)
+                if len(df) >= 200:
+                    df['sma_200'] = ta.trend.sma_indicator(df['close'], window=200)
                 
-                df['ema_12'] = ta.trend.ema_indicator(df['close'], window=12)
-                df['ema_26'] = ta.trend.ema_indicator(df['close'], window=26)
-                df['ema_50'] = ta.trend.ema_indicator(df['close'], window=50)
+                if len(df) >= 12:
+                    df['ema_12'] = ta.trend.ema_indicator(df['close'], window=12)
+                if len(df) >= 20:
+                    df['ema_20'] = ta.trend.ema_indicator(df['close'], window=20)
+                if len(df) >= 26:
+                    df['ema_26'] = ta.trend.ema_indicator(df['close'], window=26)
+                if len(df) >= 50:
+                    df['ema_50'] = ta.trend.ema_indicator(df['close'], window=50)
                 
                 # MACD using ta library
-                macd = ta.trend.MACD(df['close'])
-                df['macd'] = macd.macd()
-                df['macd_signal'] = macd.macd_signal()
-                df['macd_histogram'] = macd.macd_diff()
+                if len(df) >= self.config.slow_period + self.config.signal_period:
+                    macd = ta.trend.MACD(df['close'])
+                    df['macd'] = macd.macd()
+                    df['macd_signal'] = macd.macd_signal()
+                    df['macd_histogram'] = macd.macd_diff()
                 
                 # ADX
-                df['adx'] = ta.trend.adx(df['high'], df['low'], df['close'], window=self.config.lookback_period)
+                if len(df) >= self.config.lookback_period:
+                    df['adx'] = ta.trend.adx(df['high'], df['low'], df['close'], window=self.config.lookback_period)
                 
                 # Aroon
-                aroon = ta.trend.AroonIndicator(df['high'], df['low'], window=self.config.lookback_period)
-                df['aroon_down'] = aroon.aroon_down()
-                df['aroon_up'] = aroon.aroon_up()
-                df['aroon_osc'] = aroon.aroon_indicator()
+                if len(df) >= self.config.lookback_period:
+                    aroon = ta.trend.AroonIndicator(df['high'], df['low'], window=self.config.lookback_period)
+                    df['aroon_down'] = aroon.aroon_down()
+                    df['aroon_up'] = aroon.aroon_up()
+                    df['aroon_osc'] = aroon.aroon_indicator()
             
         except Exception as e:
             logger.error(f"Error calculating trend indicators: {e}")
@@ -199,7 +233,7 @@ class TechnicalIndicators:
     def _add_volatility_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add volatility indicators."""
         try:
-            if TALIB_AVAILABLE:
+            if TALIB_AVAILABLE and len(df) >= 20:
                 # Bollinger Bands
                 upper, middle, lower = talib.BBANDS(
                     df['close'],
@@ -219,7 +253,7 @@ class TechnicalIndicators:
                 
                 # Standard Deviation
                 df['std_dev'] = talib.STDDEV(df['close'], timeperiod=20, nbdev=1)
-            else:
+            elif len(df) >= 20:
                 # Fallback to ta library
                 import ta
                 # Bollinger Bands
@@ -236,9 +270,10 @@ class TechnicalIndicators:
                 # Standard Deviation
                 df['std_dev'] = df['close'].rolling(window=20).std()
             
-            # Keltner Channels (common calculation)
-            df['keltner_upper'] = df['ema_20'] + (df['atr'] * 2)
-            df['keltner_lower'] = df['ema_20'] - (df['atr'] * 2)
+            # Keltner Channels (common calculation) - only if we have ema_20 and atr
+            if 'ema_20' in df.columns and 'atr' in df.columns:
+                df['keltner_upper'] = df['ema_20'] + (df['atr'] * 2)
+                df['keltner_lower'] = df['ema_20'] - (df['atr'] * 2)
             
         except Exception as e:
             logger.error(f"Error calculating volatility indicators: {e}")
@@ -340,8 +375,13 @@ class TechnicalIndicators:
                 # TRIX
                 df['trix'] = ta.trend.trix(df['close'], window=30)
                 
-                # Percentage Price Oscillator
-                df['ppo'] = ta.momentum.percentage_price_oscillator(df['close'])
+                # Percentage Price Oscillator (manual calculation)
+                if len(df) >= 26:  # Need enough data for 26-period EMA
+                    ema_12 = ta.trend.ema_indicator(df['close'], window=12)
+                    ema_26 = ta.trend.ema_indicator(df['close'], window=26)
+                    df['ppo'] = ((ema_12 - ema_26) / ema_26) * 100
+                else:
+                    logger.info("Insufficient data for PPO calculation")
                 
                 # Skip Ultimate Oscillator and DPO as they're not available in ta library
                 logger.info("Some oscillators not available without TA-Lib")
@@ -392,10 +432,10 @@ class TechnicalIndicators:
         df = df.replace([np.inf, -np.inf], np.nan)
         
         # Forward fill missing values
-        df = df.fillna(method='ffill')
+        df = df.ffill()
         
         # Backward fill any remaining NaN values
-        df = df.fillna(method='bfill')
+        df = df.bfill()
         
         # Drop rows with any remaining NaN values
         df = df.dropna()
